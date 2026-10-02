@@ -1,0 +1,85 @@
+# detection pages: Thai + English lines on photo backgrounds, exact ink quads (see template.py)
+page_size: [[640, 1280], [640, 1280]]
+lines: [3, 14]
+margin: 0.04
+gap: 0.5
+quality: [55, 95]
+
+corpus:
+  weights: [0.65, 0.35]          # Thai lines, English lines
+  args:
+    - paths: [resources/corpus/th.txt]
+      weights: [1]
+      min_length: 1
+      max_length: 60
+    - paths: [resources/corpus/en.txt]
+      weights: [1]
+      min_length: 1
+      max_length: 60
+      textcase: [lower, upper, capitalize]
+
+font:
+  paths: [resources/font_th]     # TTF/OTF files; Thai fonts must carry GSUB/GPOS mark positioning
+  weights: [1]
+  size: [14, 110]
+  bold: 0.3
+
+background:
+  paths: [resources/background]  # photos without text (textures, packaging, paper, walls)
+  weights: [1]
+  alpha: [1, 1]
+  grayscale: 0.1
+  crop: 1
+
+bg_color:                        # plain pages with a flat gray/colour instead of a photo
+  prob: 0.15
+  args:
+    gray: [0, 255]
+    colorize: 0.5
+
+color:
+  rgb: [[0, 255], [0, 255], [0, 255]]
+  alpha: [1, 1]
+  grayscale: 0.3
+
+style:
+  prob: 0.3
+  args:
+    weights: [1, 1]
+    args:
+      - size: [1, 4]
+        alpha: [0.6, 1]
+        grayscale: 0.5
+      - distance: [1, 4]
+        angle: [0, 360]
+        alpha: [0.4, 0.9]
+        grayscale: 0.5
+
+transform:
+  prob: 0.7
+  args:
+    weights: [2, 2, 1]
+    args:
+      - percents: [[0.75, 1], [0.75, 1]]
+        aligns: [[-1, 1], [-1, 1]]
+      - angle: [-12, 12]
+        ccw: 0.5
+      - weights: [1, 1]
+        angle: [-15, 15]
+        ccw: 0.5
+
+postprocess:
+  args:
+    - prob: 0.35
+      args:
+        sigma: [0.5, 1.5]
+    - prob: 0.35
+      args:
+        scale: [4, 20]
+        per_channel: 0.5
+    - prob: 0.3
+      args:
+        size: [0.45, 0.85]
+    - prob: 0.6
+      args:
+        compression: [10, 45]
