@@ -27,9 +27,9 @@ class TextLayer(Layer):
         # https://en.wikipedia.org/wiki/Backslash
         text = text.replace("\\", "＼")
 
-        self.clusters = None
+        self.clusters, self.notdef = None, 0
         if USE_HARFBUZZ and not vertical:
-            image, bbox, self.clusters = hb_text.render(text, path, size, color=color, bold=bold)
+            image, bbox, self.clusters, self.notdef = hb_text.render(text, path, size, color=color, bold=bold)
         else:
             font = self._read_font(path, size)
             image, bbox = self._render_text(text, font, color, bold, vertical)

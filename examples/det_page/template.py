@@ -98,6 +98,8 @@ class DetPage(templates.Template):
         max_size = max(8, int(width * 0.9 / max(1, len(text)) * 1.8))
         font["size"] = int(min(font["size"], max_size))
         layer = layers.TextLayer(text, **font)
+        if layer.notdef:                                       # the font lacks a glyph of this text (would draw boxes)
+            return None
         alpha = layer.image[..., 3]
         if alpha.max() <= 0:
             return None

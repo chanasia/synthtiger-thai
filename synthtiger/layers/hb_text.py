@@ -7,7 +7,8 @@ font) and rasterizes the glyphs itself, so every mark lands where the font says.
 cluster horizontal extents, so a detection template can derive character boxes without a word segmenter (Thai has
 no spaces).
 
-render(text, font_path, size, color, bold) -> (image float32 RGBA (H, W, 4), bbox [0, -ascent, width, height], clusters)
+render(text, font_path, size, color, bold) -> (image float32 RGBA (H, W, 4), bbox [0, -ascent, width, height], clusters, notdef)
+    notdef: number of glyphs the font does not have (gid 0, drawn as boxes) - a caller should drop such lines.
     clusters: list of (start_char_index, x0, x1) in image pixels, one per HarfBuzz cluster, left to right.
 """
 
@@ -87,7 +88,8 @@ def render(text, path, size, color=(0, 0, 0, 255), bold=False):
         spans[cl] = (min(lo, a0), max(hi, a1))
         pen += pos.x_advance
     clusters = sorted((cl, float(lo), float(hi)) for cl, (lo, hi) in spans.items())
-    return image, bbox, clusters
+    notdef = sum(1 for gid, _, _, _ in placed if gid == 0)
+    return image, bbox, clusters, notdef
 
 
 def graphemes(text):
@@ -103,7 +105,9 @@ if __name__ == "__main__":
 
     path = sys.argv[1] if len(sys.argv) > 1 else "C:/Windows/Fonts/LeelawUI.ttf"
     text = "ป้ฤๅ ปู่ ฏ๊ กิ่ง น้ำ ที่นี่ ผู้ใหญ่ Hello 123"
-    image, bbox, clusters = render(text, path, 48)
+    image, bbox, clusters, notdef = render(text, path, 48)
+    assert notdef == 0, notdef
+    assert render('ก 漢字', path, 48)[3] > 0, 'notdef not detected'
     rgb = np.full(image.shape[:2] + (3,), 255, np.float32)
     a = image[..., 3:4] / 255.0
     rgb = rgb * (1 - a) + image[..., :3] * a
