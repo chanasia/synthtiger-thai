@@ -12,12 +12,16 @@ exact targets instead of thresholded guesses.
 
 import json
 import os
+import re
 
 import cv2
 import numpy as np
 from PIL import Image
 
 from synthtiger import components, layers, templates, utils
+
+
+DANGLING_MARK = re.compile(r"(?:^|[^ก-ฮัิ-ฺ็-๎])[ัิ-ฺ็-๎]")   # mark without a base (OCR-label noise)
 
 
 class DetPage(templates.Template):
@@ -91,7 +95,7 @@ class DetPage(templates.Template):
 
     def _make_line(self, width, height):
         text = self.corpus.data(self.corpus.sample())
-        if not text.strip():
+        if not text.strip() or DANGLING_MARK.search(text):
             return None
         font = self.font.sample({"text": text})
         # a line must fit the page: cap the font size by the page width

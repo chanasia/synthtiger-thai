@@ -46,9 +46,15 @@ def render(text, path, size, color=(0, 0, 0, 255), bold=False):
     # canvas is the advance width plus a margin of one em on each side which is trimmed back below
     pen = 0
     placed = []
+    top_fu, bot_fu = ext.ascender, ext.descender               # font-unit extent of the drawn ink (y up)
     for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
         placed.append((info.codepoint, info.cluster, pen + pos.x_offset, pos.y_offset))
+        ge = font.get_glyph_extents(info.codepoint)
+        if ge is not None and ge.height != 0:                  # stacked Thai marks often sit above the font's ascender
+            top_fu = max(top_fu, pos.y_offset + ge.y_bearing)
+            bot_fu = min(bot_fu, pos.y_offset + ge.y_bearing + ge.height)
         pen += pos.x_advance
+    ascent, descent = max(ascent, int(np.ceil(top_fu * s))), max(descent, int(np.ceil(-bot_fu * s)))
     adv_w = max(1, int(round(pen * s)))
     margin = size
     W, H = adv_w + 2 * margin, ascent + descent + 2 * margin
