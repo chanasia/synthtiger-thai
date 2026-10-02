@@ -9,6 +9,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 from synthtiger import utils
 from synthtiger.layers.layer import Layer
+from synthtiger.layers import hb_text
+
+USE_HARFBUZZ = True   # synthtiger-thai: shape + rasterize horizontal text with HarfBuzz (stacked Thai marks); Pillow for vertical
 
 
 class TextLayer(Layer):
@@ -24,8 +27,12 @@ class TextLayer(Layer):
         # https://en.wikipedia.org/wiki/Backslash
         text = text.replace("\\", "＼")
 
-        font = self._read_font(path, size)
-        image, bbox = self._render_text(text, font, color, bold, vertical)
+        self.clusters = None
+        if USE_HARFBUZZ and not vertical:
+            image, bbox, self.clusters = hb_text.render(text, path, size, color=color, bold=bold)
+        else:
+            font = self._read_font(path, size)
+            image, bbox = self._render_text(text, font, color, bold, vertical)
 
         super().__init__(image)
         self.bbox = bbox
@@ -172,11 +179,11 @@ class TextLayer(Layer):
 
         if not vertical:
             ascent, descent = font.getmetrics()
-            width = font.getsize(text, direction=direction)[0]
+            width = int(font.getlength(text, direction=direction))
             height = ascent + descent
             bbox = [0, -ascent, width, height]
         else:
-            width, height = font.getsize(text, direction=direction)
+            l, t, r, b = font.getbbox(text, direction=direction); width, height = r, b
             bbox = [-width // 2, 0, width, height]
 
         return bbox
