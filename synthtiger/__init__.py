@@ -4,6 +4,7 @@ Copyright (c) 2021-present NAVER Corp.
 MIT license
 """
 
+import synthtiger._np_compat  # noqa: F401  NumPy 2 shims for imgaug, before anything imports it
 from synthtiger import components, layers, templates, utils
 from synthtiger._version import __version__
 from synthtiger.gen import (
