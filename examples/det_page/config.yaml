@@ -1,9 +1,16 @@
-# detection pages: Thai + English lines on photo backgrounds, exact ink quads (see template.py)
+# detection pages v2: Thai + English lines on photo backgrounds, exact ink quads (see template.py)
 page_size: [[640, 1280], [640, 1280]]
-lines: [3, 14]
+lines: [3, 14]                   # scatter mode
 margin: 0.04
 gap: 0.5
 quality: [55, 95]
+
+modes: {scatter: 0.45, paragraph: 0.35, big: 0.2}
+paragraph: {size: [14, 44], lines: [6, 30], gap: [0.15, 0.8]}
+big: {size: [60, 220], lines: [1, 3], graphemes: [1, 8]}
+curve: {prob: 0.25, sag: [0.05, 0.35], bend: [0.0, 1.1]}      # bottle / can labels: sag in line heights, bend = cylinder angle
+min_contrast: 90                 # text re-inked black / white when closer than this (sum |rgb|) to the background under it
+page_fx: {glare: 0.3, shadow: 0.35, vignette: 0.25}
 
 corpus:
   weights: [0.65, 0.35]          # Thai lines, English lines
@@ -24,15 +31,15 @@ font:
   size: [14, 110]
   bold: 0.3
 
-background:
-  paths: [resources/background]  # photos without text (textures, packaging, paper, walls)
-  weights: [1]
+background:                      # real scenes (training photos with the text painted out) + DTD textures
+  paths: [resources/background/real, resources/background/dtd]
+  weights: [2, 1]
   alpha: [1, 1]
   grayscale: 0.1
   crop: 1
 
 bg_color:                        # plain pages with a flat gray/colour instead of a photo
-  prob: 0.15
+  prob: 0.12
   args:
     gray: [0, 255]
     colorize: 0.5
@@ -68,18 +75,28 @@ transform:
         angle: [-15, 15]
         ccw: 0.5
 
-postprocess:
+postprocess:                     # motion blur, brightness, contrast, gaussian blur, noise, low resolution, jpeg
   args:
-    - prob: 0.35
+    - prob: 0.15
+      args:
+        k: [3, 9]
+        angle: [0, 360]
+    - prob: 0.3
+      args:
+        beta: [-40, 40]
+    - prob: 0.3
+      args:
+        alpha: [0.6, 1.4]
+    - prob: 0.3
       args:
         sigma: [0.5, 1.5]
     - prob: 0.35
       args:
         scale: [4, 20]
         per_channel: 0.5
-    - prob: 0.3
+    - prob: 0.35
       args:
-        size: [0.45, 0.85]
+        size: [0.3, 0.85]
     - prob: 0.6
       args:
         compression: [10, 45]
